@@ -46,6 +46,19 @@ chmod 600 ~/.config/sysapp-replacer/token
 
 脚本会比对 `~/.cache/sysapp-replacer/state/<app>.tag`，同版本不重复安装。
 
+### 定时自动安装（systemd user timer）
+
+`~/.config/systemd/user/sysapp-replacer.{service,timer}` 每天 12:00 CST 跑一次：
+
+```sh
+systemctl --user status sysapp-replacer.timer
+systemctl --user list-timers sysapp-replacer.timer
+journalctl --user -u sysapp-replacer.service -n 30
+```
+
+手机没连（`adb get-state` 失败）时只下载不安装，下次连着会自动补装。
+用户服务在**登出后不运行**；需要常驻的话 `sudo loginctl enable-linger jay`。
+
 ## 手动构建（本地）
 
 ```sh
