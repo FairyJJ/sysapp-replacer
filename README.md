@@ -1,5 +1,16 @@
 # sysapp-replacer
 
+> ⚠️ **已拆分，本仓库归档，不再更新。**
+>
+> 两个应用现在各有独立仓库：
+>
+> | 应用 | 仓库 |
+> |---|---|
+> | AppHarbor → `com.xiaomi.market` | <https://github.com/FairyJJ/appharbor-repacked> |
+> | InstallerX-Revived → `com.miui.packageinstaller` | <https://github.com/FairyJJ/installerx-repacked> |
+>
+> 历史 Release 仍可下载，但请优先使用上面两个仓库的最新产物。
+
 把上游开源应用重新打包成**系统包的身份**，并保证 data 分区安装能扛过重启。
 每天定时检查上游 release，发现新版本就自动重打包、签名、发 Release —— 仓库只负责「产出可装的 APK」，
 不碰你的设备，装不装、什么时候装由你自己决定。
