@@ -117,7 +117,6 @@ jobs:
             $EXTRA \
             --out-dir dist
           ls -lh dist/
-          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
 
       - name: Publish release
         if: steps.gate.outputs.build == 'true'
@@ -125,7 +124,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          APK=$(ls dist/*.apk | head -1)
+          APK="dist/${{ matrix.name }}-${{ steps.up.outputs.tag }}-repacked.apk"
+          mv "$(ls dist/*.apk | head -1)" "$APK"
+          sha256sum "$APK" | tee dist/SHA256SUMS.txt
           gh release create "${{ steps.up.outputs.release_tag }}" "$APK" dist/SHA256SUMS.txt \
             --repo "$GITHUB_REPOSITORY" \
             --title "${{ matrix.name }} ${{ steps.up.outputs.tag }}" \
