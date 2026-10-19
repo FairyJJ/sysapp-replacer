@@ -30,17 +30,17 @@ rels.sort(key=lambda r: r.get("published_at") or "", reverse=True)
 if not rels: sys.exit("none")
 r=rels[0]
 apk=[a for a in r["assets"] if a["name"].endswith(".apk")][0]
-print(r["tag_name"]); print(apk["browser_download_url"]); print(apk["name"])
+print(r["tag_name"]); print(apk["id"]); print(apk["name"])
 ' "$1"
 }
 
 install_one() {
   local app="$1"
   echo "== $app"
-  local info tag url name
+  local info tag aid name
   info=$(get_latest "$app" 2>/dev/null) || { echo "  no release yet, skip"; return 0; }
   tag=$(echo "$info" | sed -n 1p)
-  url=$(echo "$info" | sed -n 2p)
+  aid=$(echo "$info" | sed -n 2p)
   name=$(echo "$info" | sed -n 3p)
 
   local prev=""
@@ -52,7 +52,10 @@ install_one() {
 
   local dest="$CACHE/$name"
   echo "  downloading $name ($tag)"
-  curl -fsSL --retry 3 -H "Authorization: Bearer $TOKEN" -o "$dest" "$url"
+  # private repo: browser_download_url 404s without a browser session, use the asset API
+  curl -fsSL --retry 3 -H "Authorization: Bearer $TOKEN" \
+       -H "Accept: application/octet-stream" \
+       -o "$dest" "https://api.github.com/repos/$REPO/releases/assets/$aid"
 
   if ! adb get-state >/dev/null 2>&1; then
     echo "  no adb device, saved to $dest"
