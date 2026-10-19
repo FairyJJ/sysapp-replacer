@@ -1,7 +1,8 @@
 # sysapp-replacer
 
 把上游开源应用重新打包成**系统包的身份**，并保证 data 分区安装能扛过重启。
-每天定时检查上游 release，发现新版本就自动重打包、签名、发 Release。
+每天定时检查上游 release，发现新版本就自动重打包、签名、发 Release —— 仓库只负责「产出可装的 APK」，
+不碰你的设备，装不装、什么时候装由你自己决定。
 
 ## 替换映射
 
@@ -22,7 +23,7 @@
 | `com.miui.packageinstaller` | 55500 |
 | `com.xiaomi.market`（MIUISuperMarket） | 远小于 99999999 |
 
-代价：应用内「检查更新」会永远认为已是最新，升级只能靠本仓库的 Release。
+代价：应用内「检查更新」会永远认为已是最新，升级只能从本仓库 Release 手动拉包覆盖安装。
 
 ## 工作流
 
@@ -33,31 +34,31 @@
 - 若 `appharbor-<tag>` / `installerx-<tag>` 这个 Release 已存在 → 跳过，不浪费构建时间
 - 否则下载 APK → `scripts/repack.py` → 发布 Release + 上传 artifact
 
-## 本机安装
+## 取用（纯下载，不安装）
+
+本仓库是**公开**的，直接下载 Release 即可，不需要 token：
+
+<https://github.com/FairyJJ/sysapp-replacer/releases>
+
+也可以用脚本只下载最新产物到本地目录（脚本不会调用 adb，是否安装由你决定）：
 
 ```sh
-mkdir -p ~/.config/sysapp-replacer
-printf '%s' 'ghp_xxx' > ~/.config/sysapp-replacer/token
-chmod 600 ~/.config/sysapp-replacer/token
-
-./scripts/pull-install.sh              # 两个都更新
-./scripts/pull-install.sh installerx   # 只更新一个
+./scripts/download-latest.sh                # 两个都下到 ./dist
+./scripts/download-latest.sh installerx     # 只下一个
+OUT=/tmp/apk ./scripts/download-latest.sh   # 指定输出目录
 ```
 
-脚本会比对 `~/.cache/sysapp-replacer/state/<app>.tag`，同版本不重复安装。
-
-### 定时自动安装（systemd user timer）
-
-`~/.config/systemd/user/sysapp-replacer.{service,timer}` 每天 12:00 CST 跑一次：
+手动安装：
 
 ```sh
-systemctl --user status sysapp-replacer.timer
-systemctl --user list-timers sysapp-replacer.timer
-journalctl --user -u sysapp-replacer.service -n 30
+adb install -r -t ./dist/InstallerX-<tag>-repacked.apk
+adb install -r -t ./dist/AppHarbor-<tag>-repacked.apk
 ```
 
-手机没连（`adb get-state` 失败）时只下载不安装，下次连着会自动补装。
-用户服务在**登出后不运行**；需要常驻的话 `sudo loginctl enable-linger jay`。
+### 不做的事
+
+本仓库**不提供定时自动安装**：没有 systemd timer、没有 `adb install` 自动化、不需要 GitHub token。
+Release 只负责产出可装的 APK，升级时机完全由你控制。
 
 ## 手动构建（本地）
 
